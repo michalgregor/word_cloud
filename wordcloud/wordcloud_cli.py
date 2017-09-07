@@ -64,8 +64,9 @@ def main(args):
         width=args.width, height=args.height, font_path=args.font_path,
         margin=args.margin, relative_scaling=args.relative_scaling,
         color_func=args.color_func, background_color=args.background_color,
-        collocations=args.collocations)
-    wordcloud.generate(args.text)
+        collocations=args.collocations, mode=args.colormode)
+    
+    wordcloud.generate(args.text)    
     image = wordcloud.to_image()
 
     with args.imagefile:
@@ -84,6 +85,10 @@ def parse_args(arguments):
         '--stopwords', metavar='file', type=FileType(),
         help='specify file of stopwords (containing one word per line)'
              ' to remove from the given text after parsing')
+    parser.add_argument(
+        '--colormode', metavar='colormode', type=str, default='RGB',
+        help='specify the color mode (for transparent background use RGBA'
+             'and background color that is either transparent, or equal to "None")')
     parser.add_argument(
         '--imagefile', metavar='file', type=argparse.FileType('wb'),
         default='-',
@@ -131,6 +136,9 @@ def parse_args(arguments):
     with args.text:
         args.text = args.text.read()
 
+    if args.background_color == 'None' or args.background_color == 'none':
+        args.background_color = "#ffffff00"
+            
     if args.stopwords:
         with args.stopwords:
             args.stopwords = set(map(str.strip, args.stopwords.readlines()))
