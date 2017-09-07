@@ -66,13 +66,16 @@ def main(args):
         color_func=args.color_func, background_color=args.background_color,
         collocations=args.collocations, mode=args.colormode)
     
-    wordcloud.generate(args.text)    
+    if not args.wordlist is None:
+        wordcloud.generate_from_frequencies(args.wordlist)
+    else:
+        wordcloud.generate(args.text)
+    
     image = wordcloud.to_image()
 
     with args.imagefile:
         out = args.imagefile
         image.save(out, format='png')
-
 
 def parse_args(arguments):
     # prog = 'python wordcloud_cli.py'
@@ -85,6 +88,9 @@ def parse_args(arguments):
         '--stopwords', metavar='file', type=FileType(),
         help='specify file of stopwords (containing one word per line)'
              ' to remove from the given text after parsing')
+    parser.add_argument(
+        '--wordlist', metavar='file', type=FileType(), default=None,
+        help='specify a list of words and frequencies to build the word cloud')
     parser.add_argument(
         '--colormode', metavar='colormode', type=str, default='RGB',
         help='specify the color mode (for transparent background use RGBA'
@@ -133,9 +139,20 @@ def parse_args(arguments):
     if args.colormask and args.color:
         raise ValueError('specify either a color mask or a color function')
 
-    with args.text:
-        args.text = args.text.read()
-
+    if not args.wordlist is None:
+        wordlist = []
+        
+        with args.wordlist as wordlist_file:
+            for line in wordlist_file:
+                line = line.strip()
+                if(not len(line)): continue
+                items = line.split(';')
+                wordlist.append((items[0], int(items[1])))
+        args.wordlist = dict(wordlist)
+    else:        
+        with args.text:
+            args.text = args.text.read()
+    
     if args.background_color == 'None' or args.background_color == 'none':
         args.background_color = "#ffffff00"
             
